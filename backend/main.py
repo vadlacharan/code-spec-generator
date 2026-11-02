@@ -61,8 +61,14 @@ def _safe_extract_zip(zip_path: Path, dest: Path):
 
 
 @app.get("/api/health")
+@app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/")
+def root():
+    return {"ok": True, "service": "ai-code-doc"}
 
 
 @app.post("/api/upload")

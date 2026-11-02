@@ -111,11 +111,17 @@ export default function App() {
 
       <h3>4. Download</h3>
       <div className="row">
-        {["md", "docx", "pdf"].map((f) => (
-          <a key={f} href={`${API}/api/download/${sessionId}?format=${f}`}>
-            <button disabled={!spec}>Download .{f}</button>
-          </a>
-        ))}
+        {spec && sessionId ? (
+          ["md", "docx", "pdf"].map((f) => (
+            <a key={f} href={`${API}/api/download/${sessionId}?format=${f}`}>
+              <button>Download .{f}</button>
+            </a>
+          ))
+        ) : (
+          ["md", "docx", "pdf"].map((f) => (
+            <button key={f} disabled>Download .{f}</button>
+          ))
+        )}
       </div>
     </div>
   );
