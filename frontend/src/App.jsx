@@ -5,12 +5,24 @@ import { useEffect, useState } from "react";
 
 const API = "http://localhost:8000";
 
+// Same for every OpenCode inference chat model (deepseek, kimi, glm, ...).
+// Verified against https://opencode.ai/inference/v1/models
+// (each model lists api.chat-completions.base_url = this).
+const OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1";
+
+// Model IDs are the plain inference IDs (no "opencode-go/" prefix).
+const OPENCODE_MODELS = [
+  "deepseek-v4.1-flash-free",
+  "deepseek-v4.1-flash",
+  "kimi-k3",
+  "glm-5.3",
+];
+
 export default function App() {
   const [sessionId, setSessionId] = useState("");
   const [tree, setTree] = useState([]);
-  const [provider, setProvider] = useState("claude");
-  const [model, setModel] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
+  const [provider, setProvider] = useState("opencode");
+  const [model, setModel] = useState(OPENCODE_MODELS[0]);
   const [apiKey, setApiKey] = useState("");
   const [jobId, setJobId] = useState("");
   const [status, setStatus] = useState("");
@@ -40,7 +52,8 @@ export default function App() {
     const r = await fetch(`${API}/api/generate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId, provider, model, apiKey, baseUrl }),
+      // baseUrl is embedded: same for all OpenCode chat models.
+      body: JSON.stringify({ session_id: sessionId, provider, model, apiKey, baseUrl: provider === "opencode" ? OPENCODE_BASE_URL : "" }),
     });
     const j = await r.json();
     setJobId(j.job_id);
@@ -75,16 +88,17 @@ export default function App() {
       <h3>2. Configure + optional DOCX template</h3>
       <div className="row">
         <select value={provider} onChange={(e) => setProvider(e.target.value)}>
-          <option value="claude">claude</option>
           <option value="opencode">opencode</option>
+          <option value="claude">claude-direct</option>
         </select>
-        <input placeholder="model (e.g. deepseek-chat)" value={model} onChange={(e) => setModel(e.target.value)} />
+        <select value={model} onChange={(e) => setModel(e.target.value)}>
+          {OPENCODE_MODELS.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
       </div>
       <div className="row">
-        <input placeholder="baseUrl (opencode only)" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} style={{ flex: 1 }} />
-      </div>
-      <div className="row">
-        <input type="password" placeholder="API key (not stored)" value={apiKey} onChange={(e) => setApiKey(e.target.value)} style={{ flex: 1 }} />
+        <input type="password" placeholder="API key: oc_sk_... for opencode, sk-ant-... for claude (not stored)" value={apiKey} onChange={(e) => setApiKey(e.target.value)} style={{ flex: 1 }} />
       </div>
       <div className="row">
         <input type="file" accept=".docx" onChange={uploadTemplate} />

@@ -34,8 +34,11 @@ npm run dev
 4. `GET /api/download/{session}?format=md|docx|pdf`.
 
 Providers: `claude` uses Anthropic Messages API. `opencode` uses
-OpenAI-compatible `/chat/completions` with `baseUrl + model`
-(works for deepseek / openai / gateways).
+`https://opencode.ai/inference/openai/v1/chat/completions` (same base URL for
+all chat models — embedded in both frontend and backend). Default model is
+`deepseek-v4.1-flash-free`; dropdown also offers `deepseek-v4.1-flash`,
+`kimi-k3`, `glm-5.3`. API key is pasted in the UI per request
+(`oc_sk_...` for opencode, `sk-ant-...` for claude-direct) and never stored.
 
 Templates: optional `.docx` with `{{overview}} {{tech_stack}} ... {{full_spec}}`.
 If none uploaded, a clean doc is built from Markdown.

@@ -6,6 +6,10 @@ import httpx
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 
+# Same for every OpenCode inference chat model (deepseek, kimi, glm, ...).
+# Source: https://opencode.ai/inference/v1/models -> api.chat-completions.base_url
+OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1"
+
 
 async def call_claude(api_key: str, model: str, system: str, user: str) -> str:
     """Direct Anthropic Messages API call."""
@@ -33,7 +37,7 @@ async def call_claude(api_key: str, model: str, system: str, user: str) -> str:
 
 async def call_opencode(api_key: str, model: str, system: str, user: str, base_url: str = "") -> str:
     """OpenAI-compatible chat completions. Works for deepseek / openai / opencode gateways."""
-    base_url = (base_url or os.getenv("OPENCODE_BASE_URL", "https://api.openai.com/v1")).rstrip("/")
+    base_url = (base_url or os.getenv("OPENCODE_BASE_URL", OPENCODE_BASE_URL)).rstrip("/")
     if not model:
         model = "deepseek-chat"
     headers = {"Authorization": f"Bearer {api_key}", "content-type": "application/json"}
