@@ -23,6 +23,9 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25MB
 SESSION_TTL_SECS = 60 * 60  # 1 hour
 
 app = FastAPI(title="ai-code-doc")
+
+# Bump when backend changes so /api/health proves which code is running.
+APP_VERSION = "1.4"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # local demo, no auth
@@ -63,7 +66,7 @@ def _safe_extract_zip(zip_path: Path, dest: Path):
 @app.get("/api/health")
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "version": APP_VERSION}
 
 
 @app.get("/")
