@@ -6,9 +6,13 @@ import httpx
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 
-# Same for every OpenCode inference chat model (deepseek, kimi, glm, ...).
-# Source: https://opencode.ai/inference/v1/models -> api.chat-completions.base_url
-OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1"
+# Go endpoint (bills your Go allowance). The non-Go /inference/openai/v1
+# bills pay-as-you-go balance instead -> 402 when empty.
+# Source: https://opencode.ai/inference/go/v1/models -> api base_url
+OPENCODE_BASE_URL = "https://opencode.ai/inference/go/openai/v1"
+
+# Go asks non-OpenCode clients to identify with their own UA + stable session id.
+USER_AGENT = "ai-code-doc/1.0"
 
 
 async def _post(client: httpx.AsyncClient, url: str, headers: dict, body: dict) -> dict:
@@ -44,12 +48,18 @@ async def call_claude(api_key: str, model: str, system: str, user: str) -> str:
     return "".join(texts)
 
 
-async def call_opencode(api_key: str, model: str, system: str, user: str, base_url: str = "") -> str:
+async def call_opencode(api_key: str, model: str, system: str, user: str, base_url: str = "", session_id: str = "") -> str:
     """OpenAI-compatible chat completions. Works for deepseek / openai / opencode gateways."""
     base_url = (base_url or os.getenv("OPENCODE_BASE_URL", OPENCODE_BASE_URL)).rstrip("/")
     if not model:
-        model = "deepseek-chat"
-    headers = {"Authorization": f"Bearer {api_key}", "content-type": "application/json"}
+        model = "deepseek-v4.1-flash"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "content-type": "application/json",
+        "User-Agent": USER_AGENT,
+    }
+    if session_id:
+        headers["x-opencode-session"] = session_id
     body = {
         "model": model,
         "messages": [
@@ -63,7 +73,7 @@ async def call_opencode(api_key: str, model: str, system: str, user: str, base_u
     return data["choices"][0]["message"]["content"]
 
 
-async def call_llm(provider: str, api_key: str, model: str, system: str, user: str, base_url: str = "") -> str:
+async def call_llm(provider: str, api_key: str, model: str, system: str, user: str, base_url: str = "", session_id: str = "") -> str:
     if provider == "claude":
         return await call_claude(api_key, model, system, user)
-    return await call_opencode(api_key, model, system, user, base_url)
+    return await call_opencode(api_key, model, system, user, base_url, session_id)

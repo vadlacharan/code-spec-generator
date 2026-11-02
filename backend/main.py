@@ -125,7 +125,7 @@ async def _run_job(job_id: str, body: GenerateBody):
         pick_raw = await call_llm(
             body.provider, body.apiKey, body.model,
             PICK_SYSTEM, "File tree:\n" + "\n".join(tree[:1000]),
-            body.baseUrl,
+            body.baseUrl, body.session_id,
         )
         try:
             start = pick_raw.find("[")
@@ -143,7 +143,7 @@ async def _run_job(job_id: str, body: GenerateBody):
         spec_md = await call_llm(
             body.provider, body.apiKey, body.model,
             SPEC_SYSTEM, f"Project files:\n{packed}",
-            body.baseUrl,
+            body.baseUrl, body.session_id,
         )
         s["spec_md"] = spec_md
         s["picked"] = picked

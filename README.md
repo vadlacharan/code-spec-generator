@@ -33,11 +33,13 @@ npm run dev
 3. `GET /api/status/{job}` — frontend polls every 10s.
 4. `GET /api/download/{session}?format=md|docx|pdf`.
 
-Providers: `claude` uses Anthropic Messages API. `opencode` uses
-`https://opencode.ai/inference/openai/v1/chat/completions` (same base URL for
-all chat models — embedded in both frontend and backend). Default model is
-`deepseek-v4.1-flash-free`, with `deepseek-v4.1-flash` as fallback. API key is pasted in the UI per request
-(`oc_sk_...` for opencode, `sk-ant-...` for claude-direct) and never stored.
+Providers: `claude` uses Anthropic Messages API. `opencode` uses the Go endpoint
+`https://opencode.ai/inference/go/openai/v1/chat/completions` so usage counts
+against your Go allowance (the non-Go endpoint bills cash balance -> 402).
+Default model is `deepseek-v4.1-flash`, fallback `deepseek-v4-pro`.
+Note: in console Settings › Privacy set Regions to **Global** for DeepSeek.
+API key is pasted in the UI per request (`oc_sk_...` personal key from
+opencode.ai/console) and never stored.
 
 Templates: optional `.docx` with `{{overview}} {{tech_stack}} ... {{full_spec}}`.
 If none uploaded, a clean doc is built from Markdown.

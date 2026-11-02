@@ -5,15 +5,15 @@ import { useEffect, useRef, useState } from "react";
 
 const API = "http://localhost:8000";
 
-// Same for every OpenCode inference chat model (deepseek, kimi, glm, ...).
-// Verified against https://opencode.ai/inference/v1/models
-// (each model lists api.chat-completions.base_url = this).
-const OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1";
+// Go endpoint (bills Go allowance). Verified:
+// https://opencode.ai/inference/go/v1/models -> api base_url
+const OPENCODE_BASE_URL = "https://opencode.ai/inference/go/openai/v1";
 
-// Model IDs are the plain inference IDs (no "opencode-go/" prefix).
+// Go chat-completions models only (muse-spark uses the Responses API,
+// which this app does not speak yet).
 const OPENCODE_MODELS = [
-  "deepseek-v4.1-flash-free",
   "deepseek-v4.1-flash",
+  "deepseek-v4-pro",
 ];
 
 export default function App() {
