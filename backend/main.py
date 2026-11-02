@@ -117,6 +117,7 @@ SPEC_SYSTEM = (
 
 async def _run_job(job_id: str, body: GenerateBody):
     """Background worker: tree -> LLM picks files -> read files -> LLM writes spec."""
+    jobs[job_id]["stage"] = "picking files (LLM call 1/2)..."
     try:
         s = _get_session(body.session_id)
         tree = s["tree"]
@@ -133,8 +134,11 @@ async def _run_job(job_id: str, body: GenerateBody):
             picked = [p for p in picked if p in tree][:30]
         except Exception:
             picked = tree[:20]  # fallback: first 20 files
+        jobs[job_id]["stage"] = f"reading {len(picked)} files..."
+        jobs[job_id]["picked"] = picked
         # Harness reads whatever the LLM asked for.
         packed = read_picked(Path(s["dir"]), picked)
+        jobs[job_id]["stage"] = f"writing spec (LLM call 2/2, {len(packed)} chars)..."
         # Call 2: write the spec.
         spec_md = await call_llm(
             body.provider, body.apiKey, body.model,
@@ -155,7 +159,8 @@ async def generate(body: GenerateBody):
     if not body.apiKey:
         raise HTTPException(400, "apiKey required (paste in UI, never stored)")
     job_id = uuid.uuid4().hex[:12]
-    jobs[job_id] = {"status": "pending", "session_id": body.session_id}
+    jobs[job_id] = {"status": "pending", "session_id": body.session_id,
+                    "stage": "queued...", "started": time.time()}
     asyncio.create_task(_run_job(job_id, body))
     return {"job_id": job_id}
 

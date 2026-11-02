@@ -1,7 +1,7 @@
 // UI: 1 upload -> 2 configure -> 3 poll status every 10s -> 4 download.
 // API key is transient: kept in React state only, sent per generate call.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API = "http://localhost:8000";
 
@@ -24,8 +24,11 @@ export default function App() {
   const [apiKey, setApiKey] = useState("");
   const [jobId, setJobId] = useState("");
   const [status, setStatus] = useState("");
+  const [stage, setStage] = useState("");
+  const [elapsed, setElapsed] = useState(0);
   const [spec, setSpec] = useState("");
   const [error, setError] = useState("");
+  const clock = useRef(null); // 1s elapsed timer, cleared on done/error
 
   async function uploadSource(e) {
     const f = e.target.files[0];
@@ -50,6 +53,11 @@ export default function App() {
   async function startGenerate() {
     setError("");
     setSpec("");
+    setStage("queued...");
+    setElapsed(0);
+    const t0 = Date.now();
+    if (clock.current) clearInterval(clock.current);
+    clock.current = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 1000);
     const r = await fetch(`${API}/api/generate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -68,13 +76,16 @@ export default function App() {
       const r = await fetch(`${API}/api/status/${jobId}`);
       const j = await r.json();
       setStatus(j.status);
+      if (j.stage) setStage(j.stage);
       if (j.status === "done") {
         setSpec(j.spec_md || "");
         clearInterval(t);
+        clearInterval(clock.current);
       }
       if (j.status === "error") {
         setError(j.error || "unknown error");
         clearInterval(t);
+        clearInterval(clock.current);
       }
     }, 10000);
     return () => clearInterval(t);
@@ -112,7 +123,8 @@ export default function App() {
         <button onClick={startGenerate} disabled={!sessionId || !apiKey}>Generate spec</button>
       </div>
 
-      <h3>3. Status (polls every 10s): {status}</h3>
+      <h3>3. Status (polls every 10s): {status} {elapsed}s</h3>
+      {status === "pending" && stage && <p>{stage}</p>}
       {error && <pre style={{ background: "#fdd", color: "#900" }}>{error}</pre>}
       {spec && <pre>{spec.slice(0, 20000)}</pre>}
 
