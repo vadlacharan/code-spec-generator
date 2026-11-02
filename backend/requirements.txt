@@ -1,0 +1,7 @@
+# --- backend deps (keep minimal) ---
+fastapi
+uvicorn
+python-multipart
+httpx
+python-docx
+reportlab
