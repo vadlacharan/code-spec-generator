@@ -11,6 +11,17 @@ ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1"
 
 
+async def _post(client: httpx.AsyncClient, url: str, headers: dict, body: dict) -> dict:
+    """POST and raise with the gateway's own error body (it usually explains 401/403/429)."""
+    try:
+        r = await client.post(url, headers=headers, json=body)
+        r.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        detail = e.response.text[:500]
+        raise RuntimeError(f"{e.response.status_code} from {url}: {detail}") from e
+    return r.json()
+
+
 async def call_claude(api_key: str, model: str, system: str, user: str) -> str:
     """Direct Anthropic Messages API call."""
     if not model:
@@ -27,9 +38,7 @@ async def call_claude(api_key: str, model: str, system: str, user: str) -> str:
         "messages": [{"role": "user", "content": user}],
     }
     async with httpx.AsyncClient(timeout=120) as client:
-        r = await client.post(ANTHROPIC_URL, headers=headers, json=body)
-        r.raise_for_status()
-        data = r.json()
+        data = await _post(client, ANTHROPIC_URL, headers, body)
     # Anthropic returns blocks: [{"type": "text", "text": "..."}]
     texts = [b.get("text", "") for b in data.get("content", []) if b.get("type") == "text"]
     return "".join(texts)
@@ -50,9 +59,7 @@ async def call_opencode(api_key: str, model: str, system: str, user: str, base_u
         "temperature": 0.3,
     }
     async with httpx.AsyncClient(timeout=120) as client:
-        r = await client.post(f"{base_url}/chat/completions", headers=headers, json=body)
-        r.raise_for_status()
-        data = r.json()
+        data = await _post(client, f"{base_url}/chat/completions", headers, body)
     return data["choices"][0]["message"]["content"]
 
 

@@ -25,6 +25,7 @@ export default function App() {
   const [jobId, setJobId] = useState("");
   const [status, setStatus] = useState("");
   const [spec, setSpec] = useState("");
+  const [error, setError] = useState("");
 
   async function uploadSource(e) {
     const f = e.target.files[0];
@@ -47,6 +48,8 @@ export default function App() {
   }
 
   async function startGenerate() {
+    setError("");
+    setSpec("");
     const r = await fetch(`${API}/api/generate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -69,7 +72,10 @@ export default function App() {
         setSpec(j.spec_md || "");
         clearInterval(t);
       }
-      if (j.status === "error") clearInterval(t);
+      if (j.status === "error") {
+        setError(j.error || "unknown error");
+        clearInterval(t);
+      }
     }, 10000);
     return () => clearInterval(t);
   }, [jobId, status]);
@@ -107,6 +113,7 @@ export default function App() {
       </div>
 
       <h3>3. Status (polls every 10s): {status}</h3>
+      {error && <pre style={{ background: "#fdd", color: "#900" }}>{error}</pre>}
       {spec && <pre>{spec.slice(0, 20000)}</pre>}
 
       <h3>4. Download</h3>
