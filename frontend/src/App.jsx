@@ -14,8 +14,6 @@ const OPENCODE_BASE_URL = "https://opencode.ai/inference/openai/v1";
 const OPENCODE_MODELS = [
   "deepseek-v4.1-flash-free",
   "deepseek-v4.1-flash",
-  "kimi-k3",
-  "glm-5.3",
 ];
 
 export default function App() {
